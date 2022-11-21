@@ -2,12 +2,14 @@ package kr.edu.nynoa.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 public class AccountFormDto {
     private String name;
-    private String RRN;
+    private String userRRN;
     private String phone;
     private String id;
     private String password;
