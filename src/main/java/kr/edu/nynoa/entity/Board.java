@@ -2,52 +2,50 @@ package kr.edu.nynoa.entity;
 
 import kr.edu.nynoa.constant.Role;
 import kr.edu.nynoa.dto.AccountFormDto;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.persistence.*;
 
 @Entity
-@Table(name = "users")
+@Table(name = "board")
 @Getter
 @Setter
 @ToString
-public class User {
-
+public class Board {
     @Id
-    @Column(name = "user_idx")
+    @Column(name = "board_idx")
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @Column(nullable = false, length = 10)
-    private String name;
-
-    @Column(nullable = false, length = 14)
-    private String RRN;
-
-    @Column(nullable = false, length = 13)
-    private String phone;
-
-    @Column(nullable = false, name = "user_id", unique = true)
-    private String userId;
+    @Column(nullable = false)
+    private String category;
 
     @Column(nullable = false)
-    private String password;
+    private String section;
+
+    @Column(nullable = false)
+    private String title;
 
     @Lob
     @Column(nullable = false)
-    private String address;
+    private String texts;
 
-    @Column(name = "class_number")
-    private String classNumber;
+    @Column(nullable = false)
+    private String writer;
 
-    @Column(name = "class_time")
-    private String classTime;
+    @Lob
+    @Column(nullable = false)
+    private String publishedDate;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(nullable = false)
+    private Role permission;
 
-    public static User createUser(AccountFormDto accountFormDto, PasswordEncoder passwordEncoder) {
+
+    public static User createBoard(AccountFormDto accountFormDto, PasswordEncoder passwordEncoder) {
         System.out.println("UserService createUser");
         System.out.println("IN UserService toString");
         System.out.println(accountFormDto.toString());
