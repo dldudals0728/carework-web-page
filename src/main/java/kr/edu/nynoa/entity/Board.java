@@ -43,26 +43,4 @@ public class Board {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role permission;
-
-
-    public static User createBoard(AccountFormDto accountFormDto, PasswordEncoder passwordEncoder) {
-        System.out.println("UserService createUser");
-        System.out.println("IN UserService toString");
-        System.out.println(accountFormDto.toString());
-        User user = new User();
-        user.setName(accountFormDto.getName());
-        user.setRRN(accountFormDto.getUserRRN());
-        user.setPhone(accountFormDto.getPhone());
-        user.setUserId(accountFormDto.getId());
-
-        String password = passwordEncoder.encode(accountFormDto.getPassword());
-        user.setPassword(password);
-
-        user.setAddress(accountFormDto.getAddress());
-        user.setClassNumber(accountFormDto.getClassNumber());
-        user.setClassTime(accountFormDto.getClassTime());
-        user.setRole(Role.ANONYMOUS);
-
-        return user;
-    }
 }
