@@ -9,7 +9,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
 
 @Service
 @Transactional
@@ -28,7 +27,11 @@ public class UserService {
         return user;
     }
     public User loginUser(LoginFormDto loginFormDto, PasswordEncoder passwordEncoder) {
+        System.out.println("user service loginUser function");
+        System.out.println(loginFormDto.getId());
         User user = userRepository.findByUserId(loginFormDto.getId());
+        System.out.println(user.toString());
+        System.out.println("is done");
 
         // id & pw로 db를 검색할 때 PasswordEncoder로 암호화 하면 매번 다른 해쉬 값으로 인해 다른 값이 나온다. matches로 확인!
         if (passwordEncoder.matches(loginFormDto.getPassword(), user.getPassword())) {

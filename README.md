@@ -129,6 +129,31 @@ passwordEncoder.matches(loginFormDto.getPassword(), user.getPassword())
 4. 하단의 Advanced SSH settings에서 Use private key 체크 후 .pem 키 파일 선택
 5. OK로 설정 완료 후 에러가 나오지 않는다면 설정 완료!
 
+추가) MobaXterm SSH 연결을 끊어도, spring 서버가 돌아가게 하는 방법!<br>
+MobaXterm을 종료, 즉 연결을 끊으면 실행중이던 프로그램도 종료가 된다.<br>
+만약 서버를 계속 켜두고 싶다면 bg 명령어를 이용하여 background로 실행시키면 된다.
+
+```
+$ java -jar prj.jar
+[ctrl + z] => 프로그램 대기
+$ bg => 백그라운드로 실행
+$ disown => 작업의 소유권을 shell session에서 해제
+$ exit => 연결 종료
+```
+
+다시 연결했을 때 background 작업을 종료하고 싶다면,
+```
+$ ps -ef => 현재 실행중인 bg 프로그램 확인
+    또는
+$ ps -ef | grep jar => 현재 실행중인 bg 프로그램 중 jar 파일 확인
+
+결과
+UID          PID    PPID  C STIME TTY          TIME CMD
+ubuntu     xxxx4       x  x 0x:x2 ?        00:00:14 spring-prj-SNAPSHOT.jar
+$ kill xxxx4
+```
+위와 같이 background 프로그램의 PID를 확인하고, kill PID 를 입력하면 종료된다!
+
 ### RDS 설정 시
 1. 데이터 베이스 생성 방식 -> mariadb 선택(프리티어)
 2. 해당 데이터 베이스 생성 시 마스터 사용자 이름과 마스터 사용자 암호가 DB의 사용자 이름과 사용자 암호이다.
@@ -174,6 +199,26 @@ $ mvn package -Dmaven.test.skip=true
 여기서 테스트는, repository나 service의 테스트를 말하는게 아닌 것 같다.(test가 없는 명령어를 치니까 오류)
 
 mvn package -Dmaven.test.skip=true 명령어를 사용했을 때만 된 걸 보니, test 디렉토리가 있냐 없냐로 나뉘는 것 같다. (나는 있음)
+
+## AWS RDS mariadb character set error
+AWS RDS에서 분명히 파라미터 그룹을 생성했고, 해당 파라미터 그룹의 character set을 변경해 주었는데,
+```
+Incorrect string value
+```
+에러가 났다. 확인해 보니 회원가입 시 한글입력을 받아서 하는게 한글이 깨져서 들어가고 있었다. 즉, character set을 변경한게 적용되지 않고 있던 것이다.
+
+내가 시도해본 것들이다.
+1. aws server 내에서 mariadb /etc/mysql/my.cnf 수정<br>
+이거는 수정해 보기 전에, mariadb를 실행하고 show databases 명령어를 수행해 보니 나의 aws RDS database와 달라서, 다른 적용이라 생각해 pass.
+2. 파라미터 그룹 재설정<br>
+데이터베이스 인스턴스의 파라미터 그룹을 끊고, 파라미터 그룹의 character set을 다시 설정한 후에 연결하고 재부팅 해봤다.<br>
+비교하기를 통해 default 파라미터와 비교해 봐도 설정이 잘 된 것을 알 수 있었다. 그러나 적용은 여전히 되지 않았다.
+3. !정답! 데이터베이스 drop 후 재 생성 !정답!<br>
+[정답을 알게해준 고마운 출처](https://velog.io/@yhw7979/MariaDBIncorrect-string-value-xEDx97xACxEBxA1x9C...-for-column-%EC%98%A4%EB%A5%98feat.-AWS-RDS)<br>
+결론은 <i>기존에 생성되어 있던 데이터 베이스는 적용이 되지 않는다.</i> 였다.<br>
+mysql workbench에서 aws RDS에 접속하여 SELECT * FROM information_schema.SCHEMATA를 확인해 보니 기존에 있던 db는 적용이 안되어있었다...<br>
+따라서 drop database 후 다시 create database 하니 잘 적용이 되었다... (8시간짜리....하)
+
 
 ## Error Report
 에러가 log에 나오긴 하나, 서버는 돌아가는 에러. 테스트중!

@@ -6,13 +6,12 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @ToString
 public class BoardFormDto {
-
-    private long id;
 
     private String category;
 
@@ -21,11 +20,9 @@ public class BoardFormDto {
     @NotBlank(message = "게시글의 제목을 입력해주세요.")
     private String title;
 
-    private String texts;
+    private String text;
 
     private String writer;
-
-    private String publishedDate;
 
     private Role permission;
 }

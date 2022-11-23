@@ -25,6 +25,8 @@ public class AccountController {
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginFormDto loginFormDto) {
+        System.out.println("login function start");
+        System.out.println(loginFormDto.toString());
         User user = userService.loginUser(loginFormDto, passwordEncoder);
         HashMap map = new HashMap<>();
 
