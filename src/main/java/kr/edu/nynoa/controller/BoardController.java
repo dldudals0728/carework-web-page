@@ -45,4 +45,20 @@ public class BoardController {
         map.put("boardList", boardList);
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
+
+    @GetMapping("/getBoardContent")
+    public ResponseEntity<Object> getBoardContent(@RequestParam(value = "boardIdx") String boardIdx) {
+        HashMap map = new HashMap<>();
+        long id = Long.parseLong(boardIdx);
+        Board board = boardService.getBoardContent(id);
+        if (board == null) {
+            map.put("status", 490);
+            map.put("errorMessage", "there is no content");
+        } else {
+            map.put("status", 200);
+            map.put("board", board);
+        }
+
+        return new ResponseEntity<>(map, HttpStatus.OK);
+    }
 }

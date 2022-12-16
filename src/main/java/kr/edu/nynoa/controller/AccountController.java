@@ -37,6 +37,7 @@ public class AccountController {
             map.put("userName", user.getName());
             map.put("classNumber", user.getClassNumber());
             map.put("classTime", user.getClassTime());
+            map.put("role", user.getRole());
         }
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
