@@ -117,6 +117,20 @@ passwordEncoder.matches(loginFormDto.getPassword(), user.getPassword())
 * 결론
 > 로그인 시 받은 password를 암호화해서 검색하지 말고, 받은 password와 db에 저장된 암호화된 password를 matches 함수를 이용해 비교하자!
 
+## Pageable
+```java
+import org.springframework.data.domain.Pageable;
+```
+위의 라이브러리를 기준으로 설명.
+List<Entity> 형식을 Page<Entity>로 변경하여 사용!!
+
+### @PageableDefault(sort)
+@PageableDefault annotation을 사용할 경우, sort 속성은 entity에 선언된 "변수 명"으로 해야 함!!
+
+JpaRepository를 상속받은 Repository 단에서, 함수의 매개변수에 Pageable pageable을 추가한다.<br>
+추가로 Controller 에서도 마지막 매개변수로 Pageable pageable을 받는다.
+
+
 # AWS Server
 나는 mysql로 서버를 구성하지 않고, mariadb를 사용했기 때문에 다른 부분만 작성!
 

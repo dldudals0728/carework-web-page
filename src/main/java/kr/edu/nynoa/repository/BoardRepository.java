@@ -1,6 +1,8 @@
 package kr.edu.nynoa.repository;
 
 import kr.edu.nynoa.entity.Board;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -8,9 +10,9 @@ import java.util.List;
 public interface BoardRepository extends JpaRepository<Board, Long> {
     Board findByTitle(String title);
 
-    List<Board> findByCategory(String category);
+    Page<Board> findByCategory(String category, Pageable pageable);
 
-    List<Board> findByCategoryAndSection(String category, String section);
+    Page<Board> findByCategoryAndSection(String category, String section, Pageable pageable);
 
     Board findById(long id);
 }

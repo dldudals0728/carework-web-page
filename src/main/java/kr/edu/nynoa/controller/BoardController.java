@@ -4,6 +4,10 @@ import kr.edu.nynoa.dto.BoardFormDto;
 import kr.edu.nynoa.entity.Board;
 import kr.edu.nynoa.service.BoardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -35,13 +39,18 @@ public class BoardController {
 
     @GetMapping("/selectBoard")
     public ResponseEntity<Object> selectBoard(@RequestParam(value = "category", required = true) String category,
-                                              @RequestParam(value = "section", required = false) String section) {
+                                              @RequestParam(value = "section", required = false) String section,
+                                              @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
 
-        System.out.println(category);
-        System.out.println(section);
         HashMap map = new HashMap<>();
         map.put("status", 200);
-        List<Board> boardList = boardService.selectBoardList(category, section);
+        Page<Board> boardList = boardService.selectBoardList(category, section, pageable);
+        System.out.println("======== page test ========");
+        System.out.println("boardList.getSize(): " + boardList.getSize());
+        System.out.println(boardList.getTotalElements());
+        if (boardList.getTotalElements() < 20) {
+            boardService.boardTestCreate();
+        }
         map.put("boardList", boardList);
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
@@ -60,5 +69,10 @@ public class BoardController {
         }
 
         return new ResponseEntity<>(map, HttpStatus.OK);
+    }
+
+    @PostMapping("/increaseViewCount")
+    public int increaseViewCount(@RequestParam(value = "boardIdx") String boardIdx) {
+        return 0;
     }
 }

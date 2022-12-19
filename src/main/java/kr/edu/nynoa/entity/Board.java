@@ -45,6 +45,9 @@ public class Board {
     @Column(nullable = false)
     private Role permission;
 
+    @Column(columnDefinition = "integer default 0")
+    private int viewCount;
+
     public static Board createBoard(BoardFormDto boardFormDto) {
         Board board = new Board();
         board.setCategory(boardFormDto.getCategory());
