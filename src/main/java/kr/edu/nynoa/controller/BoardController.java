@@ -54,6 +54,14 @@ public class BoardController {
         }
     }
 
+    @PostMapping("/deleteBoard")
+    public ResponseEntity<Object> deleteBoard(@RequestParam(value = "boardIdx") String boardIdx) {
+        HashMap map = new HashMap<>();
+        boardService.deleteBoard(boardIdx);
+        map.put("status", 200);
+        return new ResponseEntity<>(map, HttpStatus.OK);
+    }
+
     @GetMapping("/selectBoard")
     public ResponseEntity<Object> selectBoard(@RequestParam(value = "category", required = true) String category,
                                               @RequestParam(value = "section", required = false) String section,

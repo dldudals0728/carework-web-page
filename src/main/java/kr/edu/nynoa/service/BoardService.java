@@ -67,6 +67,12 @@ public class BoardService {
         return savedBoard;
     }
 
+    public void deleteBoard(String boardIdx) {
+//        Board deletedBoard = boardRepository.deleteById(Long.parseLong(boardIdx));
+        boardRepository.deleteById(Long.parseLong(boardIdx));
+    }
+
+
     public void boardTestCreate() {
         List<Board> boardList = boardRepository.findAll();
 
