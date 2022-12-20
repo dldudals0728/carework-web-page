@@ -1,6 +1,7 @@
 package kr.edu.nynoa.service;
 
 import kr.edu.nynoa.constant.Role;
+import kr.edu.nynoa.dto.BoardFormDto;
 import kr.edu.nynoa.entity.Board;
 import kr.edu.nynoa.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BoardService {
     private final BoardRepository boardRepository;
+
+    public Board createBoard(BoardFormDto boardFormDto) {
+        Board board = new Board();
+        board.setCategory(boardFormDto.getCategory());
+        board.setSection(boardFormDto.getSection());
+        board.setTitle(boardFormDto.getTitle());
+        board.setText(boardFormDto.getText());
+        board.setWriter(boardFormDto.getWriter());
+        board.setPublishedDate(LocalDateTime.now());
+        board.setPermission(Role.ANONYMOUS);
+        return board;
+    }
 
     public Board saveBoard(Board board) {
         return boardRepository.save(board);
@@ -38,7 +51,28 @@ public class BoardService {
         return board;
     }
 
+    public Board updateBoard(BoardFormDto boardFormDto, String boardIdx) {
+        Board board = boardRepository.findById(Long.parseLong(boardIdx));
+        if (board == null) {
+            return null;
+        }
+        board.setCategory(boardFormDto.getCategory());
+        board.setSection(boardFormDto.getSection());
+        board.setTitle(boardFormDto.getTitle());
+        board.setText(boardFormDto.getText());
+        board.setWriter(boardFormDto.getWriter());
+        board.setPublishedDate(LocalDateTime.now());
+//        board.setPermission(Role.ANONYMOUS);
+        Board savedBoard = boardRepository.save(board);
+        return savedBoard;
+    }
+
     public void boardTestCreate() {
+        List<Board> boardList = boardRepository.findAll();
+
+        if (boardList.size() > 20) {
+            return;
+        }
         int max = 30;
 
         for (int i=0; i < 30; i++) {
@@ -56,7 +90,7 @@ public class BoardService {
             }
             board.setSection(section);
             board.setTitle(section + " - " + (i + 1));
-            board.setText(section + " - " + (i + 1) + " 본문입니다.");
+            board.setText("<p>" + section + " - " + (i + 1) + " 본문입니다." + "</p>");
 
             boardRepository.save(board);
         }

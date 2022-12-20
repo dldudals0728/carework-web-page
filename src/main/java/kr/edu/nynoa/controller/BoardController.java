@@ -31,10 +31,27 @@ public class BoardController {
         map.put("status", 200);
         System.out.println(boardFormDto.toString());
 
-        Board board = Board.createBoard(boardFormDto);
+        Board board = boardService.createBoard(boardFormDto);
         boardService.saveBoard(board);
 
         return new ResponseEntity<>(board, HttpStatus.OK);
+    }
+
+    @PostMapping("/updateBoard")
+    public ResponseEntity<Object> updateBoard(@Valid @RequestBody BoardFormDto boardFormDto, @RequestParam(value = "boardIdx") String boardIdx) {
+        HashMap map = new HashMap<>();
+        System.out.println(boardFormDto.toString());
+        System.out.println(boardIdx);
+        Board board = boardService.updateBoard(boardFormDto, boardIdx);
+        if (board == null) {
+            map.put("status", 500);
+            map.put("errorMessage", "there is no board content. can not update board.");
+            return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+        } else {
+            map.put("status", 200);
+            map.put("updateBoard", board);
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
     }
 
     @GetMapping("/selectBoard")
@@ -48,9 +65,7 @@ public class BoardController {
         System.out.println("======== page test ========");
         System.out.println("boardList.getSize(): " + boardList.getSize());
         System.out.println(boardList.getTotalElements());
-        if (boardList.getTotalElements() < 20) {
-            boardService.boardTestCreate();
-        }
+//        boardService.boardTestCreate();
         map.put("boardList", boardList);
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
@@ -61,7 +76,7 @@ public class BoardController {
         long id = Long.parseLong(boardIdx);
         Board board = boardService.getBoardContent(id);
         if (board == null) {
-            map.put("status", 490);
+            map.put("status", 500);
             map.put("errorMessage", "there is no content");
         } else {
             map.put("status", 200);

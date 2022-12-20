@@ -47,16 +47,4 @@ public class Board {
 
     @Column(columnDefinition = "integer default 0")
     private int viewCount;
-
-    public static Board createBoard(BoardFormDto boardFormDto) {
-        Board board = new Board();
-        board.setCategory(boardFormDto.getCategory());
-        board.setSection(boardFormDto.getSection());
-        board.setTitle(boardFormDto.getTitle());
-        board.setText(boardFormDto.getText());
-        board.setWriter(boardFormDto.getWriter());
-        board.setPublishedDate(LocalDateTime.now());
-        board.setPermission(Role.ANONYMOUS);
-        return board;
-    }
 }

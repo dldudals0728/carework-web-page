@@ -31,7 +31,7 @@ public class AccountController {
         HashMap map = new HashMap<>();
 
         if (user == null) {
-            map.put("status", 490);
+            map.put("status", 500);
         } else {
             map.put("status", 200);
             map.put("userName", user.getName());
@@ -50,7 +50,7 @@ public class AccountController {
         if (isUser == null) {
             map.put("status", 200);
         } else {
-            map.put("status", 490);
+            map.put("status", 500);
         }
 
         return new ResponseEntity<>(map, HttpStatus.OK);
@@ -60,7 +60,7 @@ public class AccountController {
     public ResponseEntity<Object> account(@Valid @RequestBody AccountFormDto accountFormDto, BindingResult bindingResult) {
         HashMap map = new HashMap<>();
         if (bindingResult.hasErrors()) {
-            map.put("status", 490);
+            map.put("status", 500);
             map.put("error code", bindingResult.getAllErrors());
             return new ResponseEntity<>(map, HttpStatus.OK);
         } else {
