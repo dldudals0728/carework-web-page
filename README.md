@@ -174,6 +174,23 @@ CrossOrigin annotation이 빠져있었다... 추가하니까 오류 없이 잘 �
 기능 상 구현은 끝났다고 생각했는데....<br>
 이미지 업로드 및 불러오기가 다 되는데, 불러오기가 서버를 종료했다가 켜지 않는 이상 파일이 없다고 인식해버린다... 수정 필요!!!
 
+> 해결!
+
+1. pom.xml 에 devtools 의존성 추가
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
+```
+
+2. Preferences -> Compiler -> Build project automatically 체크
+3. Preferences -> Advanced Settings -> Compiler의 auto-make to start even if ... 체크
+
+이렇게 하면 static, 즉 정적 자원이 달라졌을 때 알아서 서버를 새로고침 해준다!
+
 # AWS Server
 나는 mysql로 서버를 구성하지 않고, mariadb를 사용했기 때문에 다른 부분만 작성!
 
