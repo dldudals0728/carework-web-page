@@ -36,6 +36,7 @@ public class BoardService {
     }
 
     public Page<Board> selectBoardList(String category, String section, Pageable pageable) {
+        this.boardTestCreate();
         if (section == null) {
             Page<Board> boardList = boardRepository.findByCategory(category, pageable);
             return boardList;
@@ -79,9 +80,9 @@ public class BoardService {
         if (boardList.size() > 20) {
             return;
         }
-        int max = 30;
+        int max = 100;
 
-        for (int i=0; i < 30; i++) {
+        for (int i=0; i < max; i++) {
             Board board = new Board();
             String section;
             board.setWriter("이영민");

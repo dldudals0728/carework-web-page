@@ -130,6 +130,49 @@ List<Entity> 형식을 Page<Entity>로 변경하여 사용!!
 JpaRepository를 상속받은 Repository 단에서, 함수의 매개변수에 Pageable pageable을 추가한다.<br>
 추가로 Controller 에서도 마지막 매개변수로 Pageable pageable을 받는다.
 
+## axios error: 200
+spring boot로 구현한 api의 post method에서 함수의 수행도 잘 되고, 서버에 결과도 바르게 반영되는데 return받는 axios 에서는
+code 200의 에러가 났다.
+
+그래서 다음과 같이 부분을 나눠서 어떤 오류인지 확인해보았다.
+```js
+.catch((error) => {
+    console.log("이미지 업로드에 실패하였습니다.");
+    if (error.response) {
+      console.log(
+        "요청이 이루어졌으며 서버가 2xx의 범위를 벗어나는 상태 코드로 응답했습니다."
+      );
+      console.log(error.response.data);
+      console.log(error.response.status);
+      console.log(error.response.headers);
+    } else if (error.request) {
+      console.log("요청이 이루어 졌으나 응답을 받지 못했습니다.");
+      // `error.request`는 브라우저의 XMLHttpRequest 인스턴스 또는
+      // Node.js의 http.ClientRequest 인스턴스입니다.
+      console.log(error.request);
+    } else {
+      console.log(
+        "오류를 발생시킨 요청을 설정하는 중에 문제가 발생했습니다."
+      );
+      console.log("Error", error.message);
+    }
+    console.log(error.config);
+});
+```
+이렇게 log를 확인해보니까 요청은 이루어졌으나, 응답을 받지 못한다는 것을 알았다.
+
+그래서 spring boot 쪽의 코드를 천천히 살펴보니,
+
+```java
+import org.springframework.web.bind.annotation.CrossOrigin;
+
+@CrossOrigin
+```
+CrossOrigin annotation이 빠져있었다... 추가하니까 오류 없이 잘 됨 ^^
+
+## 게시판에 image 추가하기
+기능 상 구현은 끝났다고 생각했는데....<br>
+이미지 업로드 및 불러오기가 다 되는데, 불러오기가 서버를 종료했다가 켜지 않는 이상 파일이 없다고 인식해버린다... 수정 필요!!!
 
 # AWS Server
 나는 mysql로 서버를 구성하지 않고, mariadb를 사용했기 때문에 다른 부분만 작성!

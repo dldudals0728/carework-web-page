@@ -32,9 +32,9 @@ public class BoardController {
         System.out.println(boardFormDto.toString());
 
         Board board = boardService.createBoard(boardFormDto);
-        boardService.saveBoard(board);
+        map.put("board", boardService.saveBoard(board));
 
-        return new ResponseEntity<>(board, HttpStatus.OK);
+        return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
     @PostMapping("/updateBoard")
@@ -65,7 +65,7 @@ public class BoardController {
     @GetMapping("/selectBoard")
     public ResponseEntity<Object> selectBoard(@RequestParam(value = "category", required = true) String category,
                                               @RequestParam(value = "section", required = false) String section,
-                                              @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+                                              @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
 
         HashMap map = new HashMap<>();
         map.put("status", 200);
