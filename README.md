@@ -3,7 +3,7 @@
 ## initialize
 1. spring initializer를 이용하여 spring boot project 생성
 2. application.properties 한글 주석 깨짐 처리 방지
-+ File > Settings > Editor > File Encodings > Transparent native-to-ascii conversion 체크
+   + File > Settings > Editor > File Encodings > Transparent native-to-ascii conversion 체크
 3. application.properties 작성
 
 
@@ -33,17 +33,28 @@ Process finished with exit code 0
 > SecurityConfig.java 추가!
 
 ## 길고 길었던 CORS 에러...
-spring security를 사용하면서 CORS를 해결하려 하니 어려움이 많았다.
+
+### 1st CORS Error: 초 간단 CORS 해결!
+각각의 컨트롤러마다 @CrossOrigin annotation을 추가한다.
 
 ```java
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin
 @RestController
-        ...
+@RequestMapping("/")
+public class controller {
+    
+}
 ```
-처음에 CORS 허용 방법으로 사용했던 CrossOrigin 어노테이션이 작동하지 않았다.
+
+### 2nd CORS Error: @CrossOrigin annotation didn't work
+spring security를 사용하면서 CORS를 해결하려 하니 어려움이 많았다.
+
+
+처음에 CORS 허용 방법으로 사용했던 CrossOrigin 어노테이션이 작동하지 않았다. (1st CORS Error 참고!)
 
 구글링을 해보니, 대부분 deprecated된 WebSecurityConfigurerAdapter를 상속받아 구현한 security config를 사용하고 있었다.
 
@@ -51,22 +62,66 @@ import org.springframework.web.bind.annotation.RestController;
 
 ```java
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.cors();
-    http.csrf().disable();
-    return http.build();
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.cors();
+        http.csrf().disable();
+        return http.build();
+    }
 }
 ```
 이렇게 SecurityFilterChain에서 CORS를 허용할 수 있게 됐다!
 
 [출처](https://velog.io/@yeony402/Spring-Spring-Boot-Security-CORS-%ED%95%B4%EA%B2%B0) 감사합니다 복받으세요
 
+### 3rd CORS Error: with Cookie & Session
+Cookie와 Session을 이용한 로그인 실습을 하고 있는데 또 CORS Error가 발생했다.
+
+끝까지 가보자 이거지 뭐.
+
+이번엔 WebMvcConfigurer interface를 implements한 WebConfig class를 통해 해결했다.
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+//        WebMvcConfigurer.super.addCorsMappings(registry);
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:3000")
+                .allowedMethods("GET", "POST", "DELETE", "PUT")
+                .allowCredentials(true);
+    }
+}
+```
+나는 spring boot와 react를 이용한 CSR을 구현중이기 때문에 허용할 주소의 포트 번호를 3000(react default port number)으로 허용했다.
+[출처](https://iyk2h.tistory.com/184?category=875351)
+### 
+
 ## crazy error
 accountDto를 만들 때 사용했던 필드 중 이런게 있다.
+
 ```java
-private String RRN;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
+@Entity
+@Table
+public class User {
+    @Column
+    private String RRN;
+}
 ```
 react에서 axios를 이용하여 값을 전달하고, spring에서는 accountFormDto로 받았다.
 
@@ -95,9 +150,17 @@ get 메서드의 변환에 따라 변수 명(?)이 달라지는 이유였다..
 ## PasswordEncoder
 org.springframework.security.crypto.password의 PasswordEncoder로 password를 암호화 했다.<br>
 그리고 로그인 시에 입력받은 아이디와 비밀번호 중 비밀번호를 다시 암호화 하여 db를 검색했다.
+
 ```java
-loginFormDto.getId();
-passwordEncoder.encode(loginFormDto.getPassword());
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+    public User loginUser(LoginFormDto loginFormDto, PasswordEncoder passwordEncoder) {
+        loginFormDto.getId();
+        passwordEncoder.encode(loginFormDto.getPassword());
+    }
+}
 ```
 이렇게 했는데 로그인이 도대체가 되질 않아...하
 
@@ -106,11 +169,25 @@ passwordEncoder.encode(loginFormDto.getPassword());
 그래서 찾아낸 방법은 PasswordEncoder.matches()이다!
 
 ```java
-passwordEncoder.matches(rawPassword, encodedPassword);
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+    public User loginUser(LoginFormDto loginFormDto, PasswordEncoder passwordEncoder) {
+        passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+}
 ```
 이 함수를 통해서
 ```java
-passwordEncoder.matches(loginFormDto.getPassword(), user.getPassword())
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+    public User loginUser(LoginFormDto loginFormDto, PasswordEncoder passwordEncoder) {
+        passwordEncoder.matches(loginFormDto.getPassword(), user.getPassword());
+    }
+}
 ```
 다음과 같이 처리하니까 true라는 값이 나왔다!
 
@@ -165,8 +242,14 @@ code 200의 에러가 났다.
 
 ```java
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin
+@RestController
+@RequestMapping("/")
+public class UserController {
+}
 ```
 CrossOrigin annotation이 빠져있었다... 추가하니까 오류 없이 잘 됨 ^^
 
@@ -177,19 +260,24 @@ CrossOrigin annotation이 빠져있었다... 추가하니까 오류 없이 잘 �
 > 해결!
 
 1. pom.xml 에 devtools 의존성 추가
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-devtools</artifactId>
-    <scope>runtime</scope>
-    <optional>true</optional>
-</dependency>
-```
+    ```xml
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-devtools</artifactId>
+        <scope>runtime</scope>
+        <optional>true</optional>
+    </dependency>
+    ```
 
 2. Preferences -> Compiler -> Build project automatically 체크
 3. Preferences -> Advanced Settings -> Compiler의 auto-make to start even if ... 체크
 
 이렇게 하면 static, 즉 정적 자원이 달라졌을 때 알아서 서버를 새로고침 해준다!
+
+## simple error code
+```
+405: 정의된 method와 다른 method를 이용하여 URL에 접근했을 경우
+```
 
 # AWS Server
 나는 mysql로 서버를 구성하지 않고, mariadb를 사용했기 때문에 다른 부분만 작성!
@@ -303,7 +391,7 @@ JPA에 User라는 entity가 table name이 user로 되어 있으면 에러가 나
 ```java
 @Entity
 @Table(name="users")
-public class User {..}
+public class User {}
 ```
 이렇게 한번 해보자!
 
