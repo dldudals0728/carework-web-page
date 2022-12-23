@@ -6,7 +6,9 @@ import kr.edu.nynoa.entity.User;
 import kr.edu.nynoa.manager.SessionManager;
 import kr.edu.nynoa.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.ui.Model;
@@ -71,13 +73,53 @@ public class AccountController {
             map.put("classTime", user.getClassTime());
             map.put("role", user.getRole());
 
-            Cookie cookie = new Cookie("userid", "dldudals");
-            cookie.setPath("/");
-            cookie.setMaxAge(30 * 60);
-            cookie.setSecure(true);
-            response.addCookie(cookie);
+            // Default Cookie settings
+//            Cookie cookie = new Cookie("userid", "dldudals");
+//            cookie.setPath("/");
+//            cookie.setMaxAge(30 * 60);
+//            cookie.setSecure(true);
+//            response.addCookie(cookie);
+//            response.addHeader("Set-Cookie", cookie.toString());
+
+            // Response Cookie settings
+            // ResponseCookie vs Cookie: Chrome 80 부터 sameSite의 default 값이 "Lax"로 변경되었다. 따라서 sameSite 값을 None으로 바꿔주어야 한다.
+            // but, Cookie는 sameSite 값을 변경하는 api가 없다! ResponseCookie는 있다 ^^
+            ResponseCookie cookie = ResponseCookie.from("userid", "dldudals")
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(60 * 60)
+                    .sameSite("None")
+                    .build();
+
+            response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            response.addHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.SET_COOKIE);
         }
         return new ResponseEntity<>(map, HttpStatus.OK);
+    }
+
+    @GetMapping("/getCookie")
+    public ResponseEntity<Object> getCookie(HttpServletRequest request) {
+        System.out.println("my request: " + request);
+        if (request == null) {
+            System.out.println("request is null!!");
+        } else {
+            System.out.println("request is not null!!");
+        }
+        assert request != null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            System.out.println("cookies is null!");
+        } else {
+            System.out.println("cookies is not null!");
+        }
+        System.out.println("cookies length: " + cookies.length);
+        for (int i = 0; i < cookies.length; i++) {
+            System.out.println(i + "번째 쿠키 이름: " + cookies[i].getName());
+            System.out.println(i + "번째 쿠키 값: " + cookies[i].getValue());
+        }
+
+        return new ResponseEntity<>("cookie", HttpStatus.OK);
     }
 
     @PostMapping("/login")

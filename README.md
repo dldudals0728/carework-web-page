@@ -1,5 +1,6 @@
 .README.md
 # spring boot project - NYNOA web page
+<i>해 내야지. 늘 그랬듯.</i>
 ## initialize
 1. spring initializer를 이용하여 spring boot project 생성
 2. application.properties 한글 주석 깨짐 처리 방지
@@ -32,7 +33,7 @@ Process finished with exit code 0
 해결책
 > SecurityConfig.java 추가!
 
-## 길고 길었던 CORS 에러...
+# about CORS
 
 ### 1st CORS Error: 초 간단 CORS 해결!
 각각의 컨트롤러마다 @CrossOrigin annotation을 추가한다.
@@ -106,7 +107,91 @@ public class WebConfig implements WebMvcConfigurer {
 ```
 나는 spring boot와 react를 이용한 CSR을 구현중이기 때문에 허용할 주소의 포트 번호를 3000(react default port number)으로 허용했다.
 [출처](https://iyk2h.tistory.com/184?category=875351)
-### 
+
+# about Cookie, Session, etc.
+[쿠키 속성 경정 및 설명](https://www.springcloud.io/post/2022-04/spring-samesite/#gsc.tab=0)<br>
+[sameSite에 관한 설명](https://ifuwanna.tistory.com/223)<br>
+<hr>
+
+쿠키와의 전쟁 2일차
+
+쿠키에 대해 공부하며 개발 중 response header에 Set-Cookie를 이용하여 쿠키에 관한 정보를 header에 담는 것 까지 됐다.
+
+그러나 여전히 Application 탭의 Cookie가 저장되지 않는 것을 봤다.
+
+검색을 통해 Google Chrome 80버전부터 새로운 쿠키 정책이 적용되어 sameSite 속성의 기본값이 "None" -> "Lax"로 변경되었음을 알았고,<br>
+이를 해결해주어야 한다는 것을 알았다..!!
+
+> 여기서 등장하는 ResponseCookie
+
+기존의 Cookie 사용 시
+
+```java
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+
+// Controller Annotation
+public class AccountController {
+   // PostMapping Annotation
+   public ResponseEntity<Object> cookieLogin(HttpServletResponse response) {
+
+      // Cookie 사용
+      Cookie cookie = new Cookie("userid", "dldudals");
+      cookie.setPath("/");
+      cookie.setMaxAge(30 * 60);
+      cookie.setSecure(true);
+      response.addCookie(cookie);
+      response.addHeader("Set-Cookie", cookie.toString());
+
+      return new ResponseEntity<>("data", HttpStatus.OK);
+   }
+}
+```
+이처럼 사용했다. 그런데 javax.servlet.http.Cookie의 Cookie는 sameSite 값을 변경하는 api를 제공해 주고 있지 않다.
+
+그래서 Spring Core 5.0 이상 버전 부터 ResponseCookie class를 사용할 수 있고, 여기서 sameSite를 변경할 수 있다.
+
+```java
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+
+import javax.servlet.http.HttpServletResponse;
+
+// Controller Annotation
+public class AccountController {
+   // PostMapping Annotation
+   public ResponseEntity<Object> cookieLogin(HttpServletResponse response) {
+
+      // ResponseCookie 사용
+      ResponseCookie cookie = ResponseCookie.from("userid", "dldudals")
+              .httpOnly(true)
+              .secure(true)
+              .path("/")
+              .maxAge(60 * 60)
+              .sameSite("None")
+              .build();
+
+      response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+      response.addHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.SET_COOKIE);
+
+      return new ResponseEntity<>("data", HttpStatus.OK);
+   }
+}
+```
+
+이렇게 sameSite 속성을 변경할 수 있다!
+
+이러한 개발 방식 변경으로 chrome 내에서 발생하는 경고는 없앨 수 있엇지만, 여전히 chrome에서 쿠키가 저장되지 않았다...
+
+화가 나서 사파리로 접속해보니까... 쿠키가 잘만 저장되는 걸 봤다... (뭐지 진짜 다 때려 부실까)
+
+일단 크롬에서 쿠키를 저장할 수 있는 방법으로 SSL(https) 인증서를 사용하면 된다고 하는데... 더 찾아보고 정 안되면 일단 사파리로 일련의 과정을 먼저 구현할까 생각중
+
 
 ## crazy error
 accountDto를 만들 때 사용했던 필드 중 이런게 있다.

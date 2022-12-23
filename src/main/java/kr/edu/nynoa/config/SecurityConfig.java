@@ -23,6 +23,7 @@ public class SecurityConfig {
         http.cors();
         http.csrf().disable();
         return http.build();
+//        return http.build();
     }
 
     //Cors 설정
