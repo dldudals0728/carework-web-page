@@ -113,7 +113,7 @@ public class WebConfig implements WebMvcConfigurer {
 [sameSite에 관한 설명](https://ifuwanna.tistory.com/223)<br>
 <hr>
 
-쿠키와의 전쟁 2일차
+쿠키와의 전쟁: <저장 안됨> 2일차
 
 쿠키에 대해 공부하며 개발 중 response header에 Set-Cookie를 이용하여 쿠키에 관한 정보를 header에 담는 것 까지 됐다.
 
@@ -188,10 +188,27 @@ public class AccountController {
 
 이러한 개발 방식 변경으로 chrome 내에서 발생하는 경고는 없앨 수 있엇지만, 여전히 chrome에서 쿠키가 저장되지 않았다...
 
-화가 나서 사파리로 접속해보니까... 쿠키가 잘만 저장되는 걸 봤다... (뭐지 진짜 다 때려 부실까)
+~~화가 나서 사파리로 접속해보니까... 쿠키가 잘만 저장되는 걸 봤다... (뭐지 진짜 다 때려 부실까)~~<br>
+이것도 알고 보니까 저장된게 아니라 header에 cookie가 왔다는 거였음.....
 
 일단 크롬에서 쿠키를 저장할 수 있는 방법으로 SSL(https) 인증서를 사용하면 된다고 하는데... 더 찾아보고 정 안되면 일단 사파리로 일련의 과정을 먼저 구현할까 생각중
 
+### solution
+결국 해냈다... 근데 ... 너무 어이없는 부분에서 오류가 생겼다.
+> 결론적으로, FE에서 api를 호출하는 서버의 url을 IP 주소로 셋팅해놨었는데, 이를 localhost로 변경하니 된다.<br>
+> http:// + 123.45.67.890:8080 -> http:// + localhost:8080
+
+ㅋㅋㅋㅋㅋㅋ 너무 어이없게 해결됐다.
+
+> 그 이유는 ???
+
+내가 생각하기에는 cross-origin 셋팅을 localhost로 줘 놓고, FE에서 url에 호출 할 때는 IP 주소를 이용하여 호출하니 맞지 않아서 쿠키를 저장하지 못했던 것 같다.
+
+이렇게 해결하니 Network 탭에 headers -> Set-Cookie 뒷부분의 경고 표시도 사라졌다...
+
+> Cookie, ResponseCookie, CookieGenerator 모두 됨!!
+
+근데 사파리에선 안됨 ㅋㅋ 왜???? 몰라 tq ㅋㅋㅋㅋ
 
 ## crazy error
 accountDto를 만들 때 사용했던 필드 중 이런게 있다.

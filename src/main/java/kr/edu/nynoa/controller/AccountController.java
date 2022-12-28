@@ -14,11 +14,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.CookieGenerator;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.HashMap;
 
 @CrossOrigin
@@ -29,11 +31,9 @@ public class AccountController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
-    private final SessionManager sessionManager;
-
     @PostMapping("/sessionLogin")
     public ResponseEntity<Object> sessionLogin(@RequestBody LoginFormDto loginFormDto, HttpServletResponse response) {
-        User user = userService.loginUser(loginFormDto, passwordEncoder);
+        User user = userService.login(loginFormDto, passwordEncoder, response);
         HashMap<Object, Object> map = new HashMap<>();
 
         if (user == null) {
@@ -44,24 +44,31 @@ public class AccountController {
             map.put("classNumber", user.getClassNumber());
             map.put("classTime", user.getClassTime());
             map.put("role", user.getRole());
-            sessionManager.createSession(user, response);
         }
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
     @GetMapping("/homeLogin")
-    public Model homeLogin(HttpServletRequest request, Model model) {
-        User user = (User) sessionManager.getSession(request);
-        System.out.println(user);
-        model.addAttribute("user", user);
+    public ResponseEntity<Object> homeLogin(HttpServletRequest request) {
+        HashMap<String, Object> map = new HashMap<>();
 
-        return model;
+        User user = userService.getUserSession(request);
+
+        if (user == null) {
+            map.put("status", 500);
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        } else {
+            map.put("status", 200);
+            map.put("user", user);
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
     }
 
     @PostMapping("/cookieLogin")
     public ResponseEntity<Object> cookieLogin(HttpServletResponse response, @RequestBody LoginFormDto loginFormDto) {
+        System.out.println("cookie login start");
         System.out.println(loginFormDto.toString());
-        User user = userService.loginUser(loginFormDto, passwordEncoder);
+        User user = userService.login(loginFormDto, passwordEncoder, response);
         HashMap<Object, Object> map = new HashMap<>();
 
         if (user == null) {
@@ -74,75 +81,78 @@ public class AccountController {
             map.put("role", user.getRole());
 
             // Default Cookie settings
-//            Cookie cookie = new Cookie("userid", "dldudals");
-//            cookie.setPath("/");
-//            cookie.setMaxAge(30 * 60);
-//            cookie.setSecure(true);
-//            response.addCookie(cookie);
-//            response.addHeader("Set-Cookie", cookie.toString());
+            Cookie cookie = new Cookie("userid", "dldudals");
+            cookie.setPath("/");
+            cookie.setMaxAge(30 * 60);
+            cookie.setSecure(true);
+            response.addCookie(cookie);
+            response.addHeader("Set-Cookie", cookie.toString());
 
             // Response Cookie settings
             // ResponseCookie vs Cookie: Chrome 80 부터 sameSite의 default 값이 "Lax"로 변경되었다. 따라서 sameSite 값을 None으로 바꿔주어야 한다.
             // but, Cookie는 sameSite 값을 변경하는 api가 없다! ResponseCookie는 있다 ^^
-            ResponseCookie cookie = ResponseCookie.from("userid", "dldudals")
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/")
-                    .maxAge(60 * 60)
-                    .sameSite("None")
-                    .build();
+//            ResponseCookie cookie = ResponseCookie.from("userid", "dldudals")
+//                    .httpOnly(true)
+//                    .secure(true)
+//                    .path("/")
+//                    .maxAge(60 * 60 * 60)
+//                    .sameSite("None")
+//                    .domain("localhost")
+//                    .build();
+//
+//            response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+//            response.addHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.SET_COOKIE);
 
-            response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            response.addHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.SET_COOKIE);
+            // Cookie Generator
+//            CookieGenerator cg = new CookieGenerator();
+//
+//            cg.setCookieName("cookieName");
+//            cg.addCookie(response, "cookieValue");
         }
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
-    @GetMapping("/getCookie")
-    public ResponseEntity<Object> getCookie(HttpServletRequest request) {
-        System.out.println("my request: " + request);
-        if (request == null) {
-            System.out.println("request is null!!");
-        } else {
-            System.out.println("request is not null!!");
-        }
+    @GetMapping("/getUserSession")
+    public ResponseEntity<Object> getUserSession(HttpServletRequest request) {
+        HashMap<Object, Object> map = new HashMap<>();
         assert request != null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            System.out.println("cookies is null!");
+        User user = userService.getUserSession(request);
+        if (user == null) {
+            System.out.println("there is no login info!");
+            map.put("status", 500);
+            return new ResponseEntity<>(map, HttpStatus.OK);
         } else {
-            System.out.println("cookies is not null!");
-        }
-        System.out.println("cookies length: " + cookies.length);
-        for (int i = 0; i < cookies.length; i++) {
-            System.out.println(i + "번째 쿠키 이름: " + cookies[i].getName());
-            System.out.println(i + "번째 쿠키 값: " + cookies[i].getValue());
+            System.out.println("there is login info!");
+            map.put("status", 200);
+            map.put("login", user);
         }
 
-        return new ResponseEntity<>("cookie", HttpStatus.OK);
+        return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody LoginFormDto loginFormDto) {
-        User user = userService.loginUser(loginFormDto, passwordEncoder);
-        HashMap map = new HashMap<>();
+    public ResponseEntity<Object> login(@RequestBody LoginFormDto loginFormDto, HttpServletResponse response) {
+        User user = userService.login(loginFormDto, passwordEncoder, response);
+        HashMap<Object, Object> map = new HashMap<>();
 
         if (user == null) {
             map.put("status", 500);
         } else {
             map.put("status", 200);
-            map.put("userName", user.getName());
-            map.put("classNumber", user.getClassNumber());
-            map.put("classTime", user.getClassTime());
-            map.put("role", user.getRole());
         }
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
-    @GetMapping("/idcheck")
-    public ResponseEntity<Object> idcheck(@RequestParam(value = "id", required = true) String id) {
+    @PostMapping("/logout")
+    public void logout(HttpServletRequest request) {
+        assert request != null;
+        userService.userLogout(request);
+    }
+
+    @GetMapping("/idCheck")
+    public ResponseEntity<Object> idCheck(@RequestParam(value = "id", required = true) String id) {
         User isUser = userService.findUser(id);
-        HashMap map = new HashMap<>();
+        HashMap<Object, Object> map = new HashMap<>();
 
         if (isUser == null) {
             map.put("status", 200);
@@ -155,7 +165,7 @@ public class AccountController {
 
     @PostMapping("/addUser")
     public ResponseEntity<Object> account(@Valid @RequestBody AccountFormDto accountFormDto, BindingResult bindingResult) {
-        HashMap map = new HashMap<>();
+        HashMap<Object, Object> map = new HashMap<>();
         if (bindingResult.hasErrors()) {
             map.put("status", 500);
             map.put("error code", bindingResult.getAllErrors());

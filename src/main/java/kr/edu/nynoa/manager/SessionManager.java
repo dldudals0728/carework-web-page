@@ -25,9 +25,13 @@ public class SessionManager {
 
         // cookie 생성
         Cookie mySessionCookie = new Cookie(SESSION_COOKIE_NAME, sessionId);
+        mySessionCookie.setPath("/");
+        mySessionCookie.setMaxAge(30 * 60);
+        mySessionCookie.setSecure(true);
 
         // 응답(response)에 cookie 담기.
         response.addCookie(mySessionCookie);
+        response.addHeader("Set-Cookie", mySessionCookie.toString());
     }
 
     // session 조회
@@ -36,7 +40,8 @@ public class SessionManager {
         if (sessionCookie == null) {
             return null;
         }
-
+        System.out.println("get session");
+        System.out.println(sessionCookie.getValue());
         return sessionStore.get(sessionCookie.getValue());
     }
 
@@ -44,11 +49,15 @@ public class SessionManager {
     public void expire(HttpServletRequest request) {
         Cookie sessionCookie = this.findCookie(request, SESSION_COOKIE_NAME);
         if (sessionCookie != null) {
+            System.out.println("there is session cookie. now expire");
             sessionStore.remove(sessionCookie.getValue());
         }
     }
 
     private Cookie findCookie(HttpServletRequest request, String cookieName) {
+        if (request.getCookies() == null) {
+            return null;
+        }
         return Arrays.stream(request.getCookies())
                 .filter(cookie -> cookie.getName().equals(cookieName))
                 .findAny()
