@@ -1,4 +1,6 @@
 .README.md
+# Server Side Rendering project 수행을 위한 잠정 중단
+[SSR Project link](https://github.com/dldudals0728/carework-web-page-SSR)
 # spring boot project - NYNOA web page
 <i>해 내야지. 늘 그랬듯.</i>
 ## initialize
